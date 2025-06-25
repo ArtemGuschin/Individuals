@@ -93,29 +93,7 @@ public class KeycloakService {
         }).subscribeOn(Schedulers.boundedElastic()).then();
     }
 
-//    private Mono<Void> createUserInKeycloak(String email, String password, String firstName, String lastName, String role) {
-//        return Mono.fromCallable(() -> {
-//            UserRepresentation user = new UserRepresentation();
-//            user.setEnabled(true);
-//            user.setUsername(email);
-//            user.setEmail(email);
-//            user.setFirstName(firstName);
-//            user.setLastName(lastName);
-//            user.setEmailVerified(true);
-//
-//            CredentialRepresentation credential = new CredentialRepresentation();
-//            credential.setType(CredentialRepresentation.PASSWORD);
-//            credential.setValue(password);
-//            credential.setTemporary(false);
-//            user.setCredentials(Collections.singletonList(credential));
-//
-//            Response response = keycloak.realm(realm).users().create(user);
-//            if (response.getStatus() != 201) {
-//                throw new RuntimeException("Failed to create user: " + response.getStatusInfo());
-//            }
-//            return null;
-//        }).subscribeOn(Schedulers.boundedElastic()).then();
-//    }
+
 
     public Mono<TokenResponse> loginUser(String email, String password) {
         String tokenUrl = serverUrl + "/realms/" + realm + "/protocol/openid-connect/token";
