@@ -1,4 +1,4 @@
-package com.artem.individuals.service;
+package com.artem.individuals.client;
 
 import com.artem.individuals.dto.request.RegistrationRequest;
 import com.artem.individuals.dto.response.KeycloakTokenResponse;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class KeycloakService {
+public class KeycloakIntegrationClient {
 
     private final Keycloak keycloak;
     private final WebClient webClient;
@@ -50,7 +50,7 @@ public class KeycloakService {
                 .then(loginUser(request.getEmail(), request.getPassword()));
     }
 
-    private Mono<Void> createUserInKeycloak(String email, String password, String firstName, String lastName, String role) {
+    public Mono<Void> createUserInKeycloak(String email, String password, String firstName, String lastName, String role) {
         return Mono.fromCallable(() -> {
             // 1. Создаем представление пользователя
             UserRepresentation user = new UserRepresentation();

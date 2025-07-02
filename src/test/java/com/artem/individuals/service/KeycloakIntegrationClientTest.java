@@ -1,8 +1,8 @@
 package com.artem.individuals.service;
 
+import com.artem.individuals.client.KeycloakIntegrationClient;
 import com.artem.individuals.dto.request.RegistrationRequest;
 import com.artem.individuals.dto.response.TokenResponse;
-import com.artem.individuals.dto.response.UserResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterAll;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Testcontainers
-class KeycloakServiceTest {
+class KeycloakIntegrationClientTest {
 
     private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:24.0.2";
     private static final String REALM_NAME = "test-realm";
@@ -39,7 +39,7 @@ class KeycloakServiceTest {
     private static final String ADMIN_PASSWORD = "admin";
 
     @Autowired
-    private KeycloakService keycloakService;
+    private KeycloakIntegrationClient keycloakIntegrationClient;
 
     @Container
     private static final GenericContainer<?> keycloakContainer = new GenericContainer<>(
@@ -125,7 +125,7 @@ class KeycloakServiceTest {
                 "user"
         );
 
-        StepVerifier.create(keycloakService.registerUser(request))
+        StepVerifier.create(keycloakIntegrationClient.registerUser(request))
                 .assertNext(response -> {
                     assertNotNull(response.getAccessToken());
                     assertNotNull(response.getRefreshToken());
@@ -145,9 +145,9 @@ class KeycloakServiceTest {
                 "Smith",
                 "user"
         );
-        keycloakService.registerUser(regRequest).block();
+        keycloakIntegrationClient.registerUser(regRequest).block();
 
-        StepVerifier.create(keycloakService.loginUser("login@test.com", "password123"))
+        StepVerifier.create(keycloakIntegrationClient.loginUser("login@test.com", "password123"))
                 .assertNext(response -> {
                     assertNotNull(response.getAccessToken());
                     assertNotNull(response.getRefreshToken());
@@ -166,9 +166,9 @@ class KeycloakServiceTest {
                 "Johnson",
                 "user"
         );
-        TokenResponse loginResponse = keycloakService.registerUser(regRequest).block();
+        TokenResponse loginResponse = keycloakIntegrationClient.registerUser(regRequest).block();
 
-        StepVerifier.create(keycloakService.refreshToken(loginResponse.getRefreshToken()))
+        StepVerifier.create(keycloakIntegrationClient.refreshToken(loginResponse.getRefreshToken()))
                 .assertNext(response -> {
                     assertNotNull(response.getAccessToken());
                     assertNotNull(response.getRefreshToken());
@@ -188,12 +188,12 @@ class KeycloakServiceTest {
                 "Davis",
                 "admin"
         );
-        TokenResponse loginResponse = keycloakService.registerUser(regRequest).block();
+        TokenResponse loginResponse = keycloakIntegrationClient.registerUser(regRequest).block();
 
         // Извлекаем ID пользователя из токена
         String userId = extractUserIdFromToken(loginResponse.getAccessToken());
 
-        StepVerifier.create(keycloakService.getUserById(userId))
+        StepVerifier.create(keycloakIntegrationClient.getUserById(userId))
                 .assertNext(user -> {
                     assertEquals("userinfo@test.com", user.getEmail());    // Используем getEmail()
                     assertTrue(user.getRoles().contains("admin"));         // Используем getRoles()
@@ -213,9 +213,9 @@ class KeycloakServiceTest {
                 "Wilson",
                 "user"
         );
-        keycloakService.registerUser(regRequest).block();
+        keycloakIntegrationClient.registerUser(regRequest).block();
 
-        StepVerifier.create(keycloakService.userExists("exists@test.com"))
+        StepVerifier.create(keycloakIntegrationClient.userExists("exists@test.com"))
                 .assertNext(exists -> assertTrue(exists))
                 .verifyComplete();
     }
@@ -223,7 +223,7 @@ class KeycloakServiceTest {
     @Test
     @DisplayName("Авторизация пользователя: неверные учетные данные")
     void loginUserInvalidCredentials() {
-        StepVerifier.create(keycloakService.loginUser("invalid@test.com", "wrongpassword"))
+        StepVerifier.create(keycloakIntegrationClient.loginUser("invalid@test.com", "wrongpassword"))
                 .expectErrorMatches(throwable ->
                         throwable instanceof ResponseStatusException &&
                                 ((ResponseStatusException) throwable).getStatusCode() == HttpStatus.UNAUTHORIZED)
@@ -233,7 +233,7 @@ class KeycloakServiceTest {
     @Test
     @DisplayName("Обновление токена: неверный refresh token")
     void refreshTokenInvalid() {
-        StepVerifier.create(keycloakService.refreshToken("invalid-refresh-token"))
+        StepVerifier.create(keycloakIntegrationClient.refreshToken("invalid-refresh-token"))
                 .expectErrorMatches(throwable ->
                         throwable instanceof ResponseStatusException &&
                                 ((ResponseStatusException) throwable).getStatusCode() == HttpStatus.UNAUTHORIZED)
@@ -243,7 +243,7 @@ class KeycloakServiceTest {
     @Test
     @DisplayName("Получение информации о пользователе: пользователь не найден")
     void getUserByIdNotFound() {
-        StepVerifier.create(keycloakService.getUserById("non-existent-user-id"))
+        StepVerifier.create(keycloakIntegrationClient.getUserById("non-existent-user-id"))
                 .expectErrorMatches(throwable ->
                         throwable instanceof ResponseStatusException &&
                                 ((ResponseStatusException) throwable).getStatusCode() == HttpStatus.NOT_FOUND)
