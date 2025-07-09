@@ -43,7 +43,7 @@ public class UserService {
 
     private Mono<RegistrationRequest> validateRegistrationRequest(RegistrationRequest request) {
         if(!request.getPassword().equals(request.getConfirmPassword())) {
-            return Mono.error(new IllegalArgumentException("blabla"));
+            return Mono.error(new IllegalArgumentException("Error: Password and confirm password do not match!!!"));
         }
         return Mono.just(request);
     }
